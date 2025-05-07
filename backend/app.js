@@ -15,4 +15,8 @@ app.get('/', (req, res) => {
     res.status(200).json({ message: 'Shorter API is runnin!'});
 });
 
+app.listen(PORT, () => {
+    console.log(`Server is on port ${PORT}`)
+});
+
 export default app;
