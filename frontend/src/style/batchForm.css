@@ -1,0 +1,58 @@
+.batch-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.7); /* dark overlay */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .batch-modal-content {
+    background-color: #1e293b; /* match dashboard dark card */
+    padding: 2rem;
+    border-radius: 0.5rem;
+    width: 500px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    color: white;
+    position: relative;
+  }
+  
+  .batch-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .batch-input {
+    background-color: #334155;
+    border: none;
+    padding: 0.6rem 1rem;
+    margin-bottom: 0.75rem;
+    width: 100%;
+    border-radius: 0.25rem;
+    color: white;
+  }
+  
+  .add-input-btn {
+    background: #475569;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    margin-bottom: 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+  }
+  
+  .close-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+  

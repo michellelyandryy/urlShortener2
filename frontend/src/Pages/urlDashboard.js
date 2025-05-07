@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { FaQrcode, FaCopy, FaTrash } from "react-icons/fa";
 import "../style/urlDashboard.css";
-
+import BatchModal from "../Components/batchForm.js"; 
+import LinkCard from "../Components/linkCard";
 // Utility function
 const generateShortCode = () => {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -16,6 +17,9 @@ const UrlDashboard = () => {
   const [urlInput, setUrlInput] = useState("");
   const [aliasInput, setAliasInput] = useState("");
   const [links, setLinks] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [showBatch, setShowBatch] = useState(false);
+  const [batchInputs, setBatchInputs] = useState(["", ""]);
 
   //mock data
   // const [links, setLinks] = useState([
@@ -37,6 +41,10 @@ const UrlDashboard = () => {
 
   const handleShorten = () => {
     if (!urlInput.trim()) return;
+    if (aliasInput.length > 20) {
+      alert("Custom alias cannot be longer than 20 characters.");
+      return;
+    }    
 
     const newLink = {
       originalUrl: urlInput,
@@ -52,11 +60,67 @@ const UrlDashboard = () => {
     setAliasInput("");
   };
 
+  const handleAddBatchInput = () => {
+    if (batchInputs.length < 10) {
+      setBatchInputs([...batchInputs, ""]);
+    }
+  };
+
+  const handleBatchInputChange = (value, index) => {
+    const updated = [...batchInputs];
+    updated[index] = value;
+    setBatchInputs(updated);
+  };
+
+  const handleBatchSubmit = () => {
+    const validUrls = batchInputs.filter((url) => url.trim() !== "");
+
+    if (validUrls.length < 2) {
+      alert("Please enter at least 2 valid URLs.");
+      return;
+    }
+
+    // ✅ MOCK LOGIC (testable now)
+    const newLinks = validUrls.map((url) => ({
+      originalUrl: url,
+      shortUrl: `short.ly/${generateShortCode()}`
+    }));
+
+    setBatches([...batches, newLinks]); // ✅ add as a group
+    setBatchInputs(["", ""]);
+    setShowBatch(false);
+
+    // 🔧 BACKEND VERSION (for MySQL integration later):
+    /*
+    axios.post("/api/urls/batch", {
+      urls: validUrls
+    }).then(() => {
+      setShowBatch(false);
+      setBatchInputs(["", ""]);
+      // Optionally refresh links from backend
+    }).catch((err) => {
+      console.error("Batch submission failed:", err);
+    });
+    */
+  };
+
   return (
     <div className="url-dashboard">
+      {showBatch && (
+        <BatchModal
+          batchInputs={batchInputs}
+          onClose={() => setShowBatch(false)}
+          onAddInput={handleAddBatchInput}
+          onInputChange={handleBatchInputChange}
+          onSubmit={handleBatchSubmit}
+        />
+      )}
+
       <div className="dashboard-header">
         <h2>URL Shortener</h2>
-        <button className="btn-batch">+ Create Batch</button>
+        <button className="btn-batch" onClick={() => setShowBatch(true)}>
+          + Create Batch
+        </button>
       </div>
 
       <div className="url-form">
@@ -71,35 +135,53 @@ const UrlDashboard = () => {
           placeholder="Custom Alias (optional)"
           value={aliasInput}
           onChange={(e) => setAliasInput(e.target.value)}
+          maxLength={20}
         />
-        <button className="btn-shorten" onClick={handleShorten}>Shorten</button>
+        <button className="btn-shorten" onClick={handleShorten}>
+          Shorten
+        </button>
       </div>
 
-      {links.length === 0 ? (
+      {links.length === 0 && batches.length === 0 ? (
         <p style={{ color: "#94a3b8" }}>No URLs yet. Try shortening one above.</p>
       ) : (
         <div className="url-list">
+
           {links.map((link, index) => (
-            <div className="url-card" key={index}>
-              <div>
-                <p className="label">Original URL</p>
-                <p>{link.originalUrl}</p>
-              </div>
-              <div>
-                <p className="label">ShortURL</p>
-                <p>{link.shortUrl}</p>
-              </div>
-              {link.customAlias && (
-                <div>
-                  <p className="label">CustomURL</p>
-                  <p>{link.customAlias}</p>
+            <div className="url-batch-inner" key={`link-${index}`}>
+              <LinkCard
+                originalUrl={link.originalUrl}
+                shortUrl={link.shortUrl}
+                customAlias={link.customAlias}
+              />
+            </div>
+          ))}
+
+          {batches.map((batch, batchIndex) => (
+            <div className="url-batch" key={`batch-${batchIndex}`}>
+              {batch.map((link, index) => (
+                <div className="url-card" key={`batch-${batchIndex}-link-${index}`}>
+                  <div>
+                    <p className="label">Original URL</p>
+                    <p>{link.originalUrl}</p>
+                  </div>
+                  <div>
+                    <p className="label">ShortURL</p>
+                    <p>{link.shortUrl}</p>
+                  </div>
+                  {link.customAlias && (
+                    <div>
+                      <p className="label">CustomURL</p>
+                      <p>{link.customAlias}</p>
+                    </div>
+                  )}
+                  <div className="actions">
+                    <button title="QR"><FaQrcode /></button>
+                    <button title="Copy"><FaCopy /></button>
+                    <button title="Delete"><FaTrash /></button>
+                  </div>
                 </div>
-              )}
-              <div className="actions">
-                <button title="QR"><FaQrcode /></button>
-                <button title="Copy"><FaCopy /></button>
-                <button title="Delete"><FaTrash /></button>
-              </div>
+              ))}
             </div>
           ))}
         </div>
