@@ -33,15 +33,16 @@ export const getLink = async (short_link) => {
 
 //rm link
 export const deleteLink = async (short_link) => {
+  let conn;
   try{  
-    const shortCode = short_link  //.replace('short.ly/', '');
+    const shortCode = short_link.replace('short.ly/', '');
 
     //validate syntax
-    if (!shortCode || !/^[a-zA-Z0-9]{6}$/.test(shortCode)) {
-      return { success: false, message: 'Invalid short URL format' };
-    }
+    // if (!shortCode || !/^[a-zA-Z0-9]{6}$/.test(shortCode)) {
+    //   return { success: false, message: 'Invalid short URL format' };
+    // }
 
-    const conn = await pool.query.getConnection();
+    conn = await pool.getConnection();
     await conn.beginTransaction();
 
     try{
@@ -61,7 +62,7 @@ export const deleteLink = async (short_link) => {
 
       //delete counter first
       await conn.query(
-        'DELETE FROM counters WHERE link_id = (SELECT id FROM links WHERE short_link = ?)',
+        'DELETE FROM counter WHERE link_id = (SELECT id FROM links WHERE short_link = ?)',
         [link[0].id]
       );
 
@@ -79,17 +80,17 @@ export const deleteLink = async (short_link) => {
         success: false, message: "Darn, deletion failed"
       };
 
-    } catch (err){
+    } catch (error){
       //no orphan record
       await conn.rollback();
-      throw err;
+      throw error;
     } finally {
       //relesse conn
       conn.release();
     }
 
   } catch (error) {
-    console.error('Delete failed:', err);
+    console.error('Delete failed:', error);
     return{
       success: false,
       message: 'Server error during deleting process',

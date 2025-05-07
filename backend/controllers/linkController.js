@@ -38,8 +38,8 @@ export const redirectToLongLink = async (req, res) => {
         }
 
         //put up +1 on counter
-        incrementCounter(link.id).catch(err => 
-            console.error('Counter increment failed:', err)
+        incrementCounter(link.id).catch(error => 
+            console.error('Counter increment failed:', error)
         );
 
         //finally redirect
