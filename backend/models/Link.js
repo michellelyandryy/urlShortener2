@@ -1,45 +1,28 @@
-import shortid from 'shortid';
+// import shortid from 'shortid';
 import pool from '../config/db.js';
 import { generateBase62Code, decodeBase62Code } from '../utils/helpers.js';
 
 //make link
 export const createLink = async (long_link) => {
 
+  const [latestId] = await pool.query('SELECT MAX(id) AS maxId FROM links');
+  const nextId = (latestId[0].maxId || 0) + 1; //get next id
+  const short_link = generateBase62Code(nextId);
+
   const [result] = await pool.query(
-    'INSERT INTO links (long_link) VALUES (?)',
-    [long_link]
-  );
-  const id = result.insertId;
-
-  //check for uniqueness
-  let isUnique = false;
-  let short_link;
-  while(!isUnique){
-    const short_link = generateBase62Code(id).replace('short.ly/', '');
-
-    const [existingLink] = await pool.query(
-      `SELECT short_link FROM links WHERE short_link = ?`,
-      [short_link]
-    );
-
-    if(existingLink.length === 0){
-      isUnique = true;
-    }
-  }
-
-  await pool.query(
-    'UPDATE links SET short_link = ? WHERE id = ?',
-    [short_link, id]
+    'INSERT INTO links (long_link, short_link) VALUES (?, ?)',
+    [long_link, short_link]
   );
 
-  return {id: result.insertId, short_link: `short.ly/${short_link}`};
+  return {
+    id: result.insertId, short_link: `short.ly/${short_link}`};
 };
 
 //searches for link
 export const getLink = async (short_link) => {
 
-  const id = short_link.replace('short.ly/', '');
-  const decoded = decodeBase62Code(id);
+  const shortCode = short_link  //.replace('short.ly/', '');
+  const decoded = decodeBase62Code(shortCode);
 
   const [rows] = await pool.query(
     'SELECT id, long_link FROM links WHERE id = ?',
@@ -50,11 +33,66 @@ export const getLink = async (short_link) => {
 
 //rm link
 export const deleteLink = async (short_link) => {
-  const shortCode = short_link.replace('short.ly/', '');
+  try{  
+    const shortCode = short_link  //.replace('short.ly/', '');
 
-  const result = await pool.query(
-    'DELETE FROM links WHERE short_link = ?',
-    [shortCode]
-  );
-  return result.affectedRows > 0;
-}
+    //validate syntax
+    if (!shortCode || !/^[a-zA-Z0-9]{6}$/.test(shortCode)) {
+      return { success: false, message: 'Invalid short URL format' };
+    }
+
+    const conn = await pool.query.getConnection();
+    await conn.beginTransaction();
+
+    try{
+
+      //check if link exists
+      const [link] = await conn.query(
+        'SELECT id FROM links WHERE short_link = ?',
+        [shortCode]
+      );
+
+      if(link.length === 0){
+        await conn.rollback();
+        return {
+          success: false, message: 'Short link not found'
+        };
+      }
+
+      //delete counter first
+      await conn.query(
+        'DELETE FROM counters WHERE link_id = (SELECT id FROM links WHERE short_link = ?)',
+        [link[0].id]
+      );
+
+      //rm link
+      const [result] = await conn.query(
+        'DELETE FROM links WHERE short_link = ?',
+        [shortCode]
+      );
+
+      await conn.commit();
+      return result.affectedRows > 0 ? {
+        success: true, message: "Yay, short url deleted"
+      } 
+      :{
+        success: false, message: "Darn, deletion failed"
+      };
+
+    } catch (err){
+      //no orphan record
+      await conn.rollback();
+      throw err;
+    } finally {
+      //relesse conn
+      conn.release();
+    }
+
+  } catch (error) {
+    console.error('Delete failed:', err);
+    return{
+      success: false,
+      message: 'Server error during deleting process',
+    };
+  }
+};

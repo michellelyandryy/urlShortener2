@@ -1,4 +1,5 @@
-import { createLink, 
+import { 
+    createLink, 
     getLink,
     deleteLink
  } from "../models/Link.js";
@@ -25,20 +26,26 @@ export const redirectToLongLink = async (req, res) => {
     try{
         const {short_link} = req.params;
 
+        //validate
+        if (!short_link || !/^[a-zA-Z0-9]{6}$/.test(short_link)) {
+            return res.status(400).json({ message: 'Invalid short link format' });
+        }
+
         //getLink from model 
         const link = await getLink(short_link);
-
         if(!link){
             return res.status(404).json({ message: 'Link not foudn'});
         }
 
         //put up +1 on counter
-        await incrementCounter(link.id);
+        incrementCounter(link.id).catch(err => 
+            console.error('Counter increment failed:', err)
+        );
 
         //finally redirect
-        res.redirect(link.long_link);
+        res.status(302).redirect(link.long_link);
     } catch (error){
-        console.error('Error redirecting to long link:', error);
+        console.error('Redirection error:', error);
         res.status(500).json({message: "Redirection error"});
     }
 };
@@ -50,7 +57,6 @@ export const getLinkCount = async (req, res) => {
 
         //get id
         const link = await getLink(short_link);
-        
         if(!link){
             return res.status(404).json({message: 'Link not foudn'});
         }

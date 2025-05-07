@@ -12,19 +12,21 @@ const BASE62 ="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 //base62 encoding randommm
 export const generateBase62Code = (id) => {
+    if (id === 0) return BASE62[0];
+    
     let shortCode = '';
-    for(let i = 0; i < 6; i++){
-        const randomIndex = Math.floor(Math.random() * BASE62.length);
-        shortCode += BASE62[randomIndex];
+    while(id > 0){
+        shortCode = BASE62[id % 62] + shortCode;
+        id = Math.floor(id / 62);
     }
-    return `short.ly/${shortCode}`;
+    return shortCode.padStart(6, '0');
 };
 
 // decode
 export const decodeBase62Code = (shortCode) => {
     let id = 0;
-    for (let i = 0; i < shortCode.length; i++){
-        id = id * 62 + BASE62.indexOf(shortCode[i]);
+    for (const char of shortCode){
+        id = id * 62 + BASE62.indexOf(char);
     }
     return id;
 };
