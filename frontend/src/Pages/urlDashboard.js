@@ -4,6 +4,7 @@ import "../style/urlDashboard.css";
 import BatchModal from "../Components/batchForm.js"; 
 import LinkCard from "../Components/linkCard";
 import QrPopup from "../Components/qrPopup.js";
+import { toast } from "react-toastify";
 
 // Utility function
 const generateShortCode = () => {
@@ -158,31 +159,51 @@ const UrlDashboard = () => {
       ) : (
         <div className="url-list">
 
-          {/* ✅ Single Links */}
           {links.map((link, index) => (
             <div className="url-batch-inner" key={`link-${index}`}>
               <LinkCard
                 originalUrl={link.originalUrl}
                 shortUrl={link.shortUrl}
                 customAlias={link.customAlias}
-                onShowQR={(url) => setSelectedQR(url)}
+                onShowQR={setSelectedQR}
+                onCopy={(copiedText) => console.log("Copied:", copiedText)}
+                onDelete={() => {
+                  const updatedLinks = [...links];
+                  updatedLinks.splice(index, 1);
+                  setLinks(updatedLinks);
+                }}
               />
             </div>
           ))}
 
           {batches.map((batch, batchIndex) => (
             <div className="url-batch" key={`batch-${batchIndex}`}>
-              {batch.map((link, index) => (
+              {batch.map((link, linkIndex) => (
                 <LinkCard
-                  key={`batch-${batchIndex}-link-${index}`}
+                  key={`batch-${batchIndex}-link-${linkIndex}`}
                   originalUrl={link.originalUrl}
                   shortUrl={link.shortUrl}
                   customAlias={link.customAlias}
-                  onShowQR={(url) => setSelectedQR(url)}
+                  onShowQR={setSelectedQR}
+                  onCopy={() => toast.success("Copied to clipboard!")}
+                  onDelete={() => {
+                    const updatedBatch = [...batch];
+                    updatedBatch.splice(linkIndex, 1);
+
+                    const updatedBatches = [...batches];
+                    if (updatedBatch.length === 0) {
+                      updatedBatches.splice(batchIndex, 1);
+                    } else {
+                      updatedBatches[batchIndex] = updatedBatch;
+                    }
+
+                    setBatches(updatedBatches);
+                  }}
                 />
               ))}
             </div>
           ))}
+
         </div>
       )}
     </div>

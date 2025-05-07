@@ -1,8 +1,17 @@
 import React from "react";
 import { FaQrcode, FaCopy, FaTrash } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "../style/urlDashboard.css";
 
-const LinkCard = ({ originalUrl, shortUrl, customAlias, onShowQR }) => {
+const LinkCard = ({ originalUrl, shortUrl, customAlias, onShowQR, onCopy, onDelete }) => {
+  const handleCopy = () => {
+    const textToCopy = customAlias || shortUrl;
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      toast.success("Copied to clipboard!");
+      if (onCopy) onCopy(textToCopy);
+    });
+  };
+
   return (
     <div className="url-card">
       <div>
@@ -17,8 +26,12 @@ const LinkCard = ({ originalUrl, shortUrl, customAlias, onShowQR }) => {
         <button title="QR" onClick={() => onShowQR(customAlias || shortUrl)}>
           <FaQrcode />
         </button>
-        <button title="Copy"><FaCopy /></button>
-        <button title="Delete"><FaTrash /></button>
+        <button title="Copy" onClick={handleCopy}>
+          <FaCopy />
+        </button>
+        <button title="Delete" onClick={onDelete}>
+          <FaTrash />
+        </button>
       </div>
     </div>
   );
