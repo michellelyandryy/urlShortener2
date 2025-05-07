@@ -2,7 +2,7 @@ import React from "react";
 import { FaQrcode, FaCopy, FaTrash } from "react-icons/fa";
 import { toast } from "react-toastify";
 import "../style/urlDashboard.css";
-
+import { Tooltip } from "react-tooltip";
 const LinkCard = ({ originalUrl, shortUrl, customAlias, onShowQR, onCopy, onDelete }) => {
   const handleCopy = () => {
     const textToCopy = customAlias || shortUrl;
@@ -32,6 +32,7 @@ const LinkCard = ({ originalUrl, shortUrl, customAlias, onShowQR, onCopy, onDele
         <button title="Delete" onClick={onDelete}>
           <FaTrash />
         </button>
+        <Tooltip id="tooltip" />
       </div>
     </div>
   );

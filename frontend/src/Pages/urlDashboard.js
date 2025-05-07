@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaQrcode, FaCopy, FaTrash } from "react-icons/fa";
 import "../style/urlDashboard.css";
 import BatchModal from "../Components/batchForm.js"; 
 import LinkCard from "../Components/linkCard";
 import QrPopup from "../Components/qrPopup.js";
 import { toast } from "react-toastify";
+import axios from "axios";
 
 // Utility function
 const generateShortCode = () => {
@@ -23,7 +24,11 @@ const UrlDashboard = () => {
   const [batches, setBatches] = useState([]);
   const [showBatch, setShowBatch] = useState(false);
   const [batchInputs, setBatchInputs] = useState(["", ""]);
-  const [selectedQR, setSelectedQR] = useState(null); // ✅ moved here
+  const [selectedQR, setSelectedQR] = useState(null); 
+
+  useEffect(() => {
+    document.body.classList.toggle("modal-open", showBatch);
+  }, [showBatch]);
 
   //mock data
   // const [links, setLinks] = useState([
@@ -84,17 +89,15 @@ const UrlDashboard = () => {
       return;
     }
 
-    // ✅ MOCK LOGIC (testable now)
     const newLinks = validUrls.map((url) => ({
       originalUrl: url,
       shortUrl: `short.ly/${generateShortCode()}`
     }));
 
-    setBatches([...batches, newLinks]); // ✅ add as a group
+    setBatches([...batches, newLinks]); 
     setBatchInputs(["", ""]);
     setShowBatch(false);
 
-    // 🔧 BACKEND VERSION (for MySQL integration later):
     /*
     axios.post("/api/urls/batch", {
       urls: validUrls
@@ -112,15 +115,17 @@ const UrlDashboard = () => {
     <div className="url-dashboard">
       {showBatch && (
         <BatchModal
-          batchInputs={batchInputs}
-          onClose={() => setShowBatch(false)}
-          onAddInput={handleAddBatchInput}
-          onInputChange={handleBatchInputChange}
-          onSubmit={handleBatchSubmit}
-        />
-      )}
+        batchInputs={batchInputs}
+        onClose={() => {
+          setShowBatch(false);
+          setBatchInputs(["", ""]); 
+       }}
+        onAddInput={handleAddBatchInput}
+        onInputChange={handleBatchInputChange}
+        onSubmit={handleBatchSubmit}
+      />
+    )}
 
-      {/* ✅ QR Code Popup */}
       {selectedQR && (
         <QrPopup
           url={selectedQR}

@@ -1,8 +1,8 @@
 import React from "react";
 import { FaTimes, FaPlus } from "react-icons/fa";
-import "../style/batchForm.css"; 
+import "../style/batchForm.css";
 
-const batchForm = ({
+const BatchForm = ({
   batchInputs,
   onClose,
   onAddInput,
@@ -30,18 +30,19 @@ const batchForm = ({
           />
         ))}
 
-        {batchInputs.length < 10 && (
-          <button className="add-input-btn" onClick={onAddInput}>
-            <FaPlus /> Add
+        <div className="batch-button-group">
+          {batchInputs.length < 10 && (
+            <button className="btn-add" onClick={onAddInput}>
+              <FaPlus /> Add
+            </button>
+          )}
+          <button className="btn-shorten" onClick={onSubmit}>
+            Shorten
           </button>
-        )}
-
-        <button className="btn-shorten" onClick={onSubmit}>
-          Shorten
-        </button>
+        </div>
       </div>
     </div>
   );
 };
 
-export default batchForm;
+export default BatchForm;
