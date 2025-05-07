@@ -1,12 +1,15 @@
 import pool from '../config/db.js';
+import { generateBase62Code, decodeBase62Code } from '../utils/helpers.js';
 
 export const createLink = async (long_link) => {
-  const short_link = generateBase62Code();
+
   const [result] = await pool.query(
     'INSERT INTO links (short_link, long_link) VALUES (?, ?)',
     [short_link, long_link]
   );
-  return { id: result.insertId, short_link };
+  const id = result.insertId;
+
+  const short_link = generateBase62Code(id);
 };
 
 export const getLink = async (short_link) => {
