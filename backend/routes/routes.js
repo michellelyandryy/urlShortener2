@@ -2,7 +2,8 @@ import express from 'express';
 import {
     createShortLink,
     redirectToLongLink,
-    getLinkCount
+    getLinkCount,
+    deleteShortLink
 } from '../controllers/linkController.js';
 
 const router = express.Router();
@@ -15,5 +16,8 @@ router.get('/:short_link', redirectToLongLink);
 
 //for counter
 router.get('/:short_link/count', getLinkCount);
+
+//for delete
+router.delete('/:short_link', deleteShortLink)
 
 export default router;

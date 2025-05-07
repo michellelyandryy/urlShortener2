@@ -1,4 +1,7 @@
-import { createLink, getLink } from "../models/Link.js";
+import { createLink, 
+    getLink,
+    deleteLink
+ } from "../models/Link.js";
 import { incrementCounter, getCount} from "../models/Counter.js";
 
 export const createShortLink = async (req, res) => {
@@ -58,5 +61,23 @@ export const getLinkCount = async (req, res) => {
     } catch (error) {
         console.error('Error fetching link clicks:',);
         res.status(500).json({message: "Something went wrong fetching link clicks"});
+    }
+};
+
+//rm link
+export const deleteShortLink = async (req, res) => {
+    try{
+        const {short_link} = req.params;
+
+        //rm in db
+        const isDeleted = await deleteLink(short_link);
+
+        if(!isDeleted){
+            return res.status(404).json({ message: "Link not found"});
+        }
+        res.status(200).json({ message: "Link successfully deleted"});
+    }catch (error){
+        console.error('Error deleting link:', error);
+        res.status(500).json({ message: "Deleting error"});
     }
 };
