@@ -3,6 +3,8 @@ import { FaQrcode, FaCopy, FaTrash } from "react-icons/fa";
 import "../style/urlDashboard.css";
 import BatchModal from "../Components/batchForm.js"; 
 import LinkCard from "../Components/linkCard";
+import QrPopup from "../Components/qrPopup.js";
+
 // Utility function
 const generateShortCode = () => {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -20,6 +22,7 @@ const UrlDashboard = () => {
   const [batches, setBatches] = useState([]);
   const [showBatch, setShowBatch] = useState(false);
   const [batchInputs, setBatchInputs] = useState(["", ""]);
+  const [selectedQR, setSelectedQR] = useState(null); // ✅ moved here
 
   //mock data
   // const [links, setLinks] = useState([
@@ -44,7 +47,7 @@ const UrlDashboard = () => {
     if (aliasInput.length > 20) {
       alert("Custom alias cannot be longer than 20 characters.");
       return;
-    }    
+    }
 
     const newLink = {
       originalUrl: urlInput,
@@ -116,6 +119,14 @@ const UrlDashboard = () => {
         />
       )}
 
+      {/* ✅ QR Code Popup */}
+      {selectedQR && (
+        <QrPopup
+          url={selectedQR}
+          onClose={() => setSelectedQR(null)}
+        />
+      )}
+
       <div className="dashboard-header">
         <h2>URL Shortener</h2>
         <button className="btn-batch" onClick={() => setShowBatch(true)}>
@@ -147,12 +158,14 @@ const UrlDashboard = () => {
       ) : (
         <div className="url-list">
 
+          {/* ✅ Single Links */}
           {links.map((link, index) => (
             <div className="url-batch-inner" key={`link-${index}`}>
               <LinkCard
                 originalUrl={link.originalUrl}
                 shortUrl={link.shortUrl}
                 customAlias={link.customAlias}
+                onShowQR={(url) => setSelectedQR(url)}
               />
             </div>
           ))}
@@ -160,27 +173,13 @@ const UrlDashboard = () => {
           {batches.map((batch, batchIndex) => (
             <div className="url-batch" key={`batch-${batchIndex}`}>
               {batch.map((link, index) => (
-                <div className="url-card" key={`batch-${batchIndex}-link-${index}`}>
-                  <div>
-                    <p className="label">Original URL</p>
-                    <p>{link.originalUrl}</p>
-                  </div>
-                  <div>
-                    <p className="label">ShortURL</p>
-                    <p>{link.shortUrl}</p>
-                  </div>
-                  {link.customAlias && (
-                    <div>
-                      <p className="label">CustomURL</p>
-                      <p>{link.customAlias}</p>
-                    </div>
-                  )}
-                  <div className="actions">
-                    <button title="QR"><FaQrcode /></button>
-                    <button title="Copy"><FaCopy /></button>
-                    <button title="Delete"><FaTrash /></button>
-                  </div>
-                </div>
+                <LinkCard
+                  key={`batch-${batchIndex}-link-${index}`}
+                  originalUrl={link.originalUrl}
+                  shortUrl={link.shortUrl}
+                  customAlias={link.customAlias}
+                  onShowQR={(url) => setSelectedQR(url)}
+                />
               ))}
             </div>
           ))}

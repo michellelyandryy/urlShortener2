@@ -58,7 +58,7 @@ const AnalyticsPage = () => {
   
     return (
       <div className="analytics-page">
-        <h2>Analytics: URL NAME</h2>
+        <h2>Click Analytics</h2>
   
         <div className="analytics-section">
           <div className="analytics-card">

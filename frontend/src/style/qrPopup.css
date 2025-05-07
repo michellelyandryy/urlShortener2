@@ -1,0 +1,53 @@
+.qr-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(15, 23, 42, 0.7); 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .qr-popup-content {
+    position: relative;
+    background-color: #1e293b; 
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 220px;
+    min-height: 250px;
+  }
+  
+  .qr-popup-content canvas {
+    margin-bottom: 2.5rem;
+  }
+  
+  .qr-popup-button {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.85rem;
+    background-color: #334155;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .qr-popup-button:hover {
+    background-color: #475569;
+  }
+  
+  .qr-close {
+    position: absolute;
+    top: 0.6rem;
+    left: 0.8rem;
+    font-size: 1.2rem;
+    color: #94a3b8;
+    cursor: pointer;
+  }
+  
