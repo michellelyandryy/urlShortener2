@@ -1,23 +1,23 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from "react";
+import Sidebar from "./Components/sideBar";
+import UrlDashboard from "./Pages/urlDashboard";
+import "./style/App.css";
+import "./style/sideBar.css"; // adjust paths if needed
+import "./style/urlDashboard.css"; // make sure this exists too
 
 function App() {
+  const [activePage, setActivePage] = useState("urls");
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="grid-layout">
+      <Sidebar activePage={activePage} setActivePage={setActivePage} />
+      <main className="content">
+        {activePage === "urls" ? (
+          <UrlDashboard />
+        ) : (
+          <p style={{ color: "white" }}>Analytics page coming soon.</p>
+        )}
+      </main>
     </div>
   );
 }
