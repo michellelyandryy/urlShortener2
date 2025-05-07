@@ -1,10 +1,10 @@
 import React from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import "../style/qrPopup.css"; 
+import "../style/qrPopup.css";
 
 const QrPopup = ({ url, onClose }) => {
   const downloadQR = () => {
-    const canvas = document.getElementById("qr-code");
+    const canvas = document.getElementById("qrCodeCanvas"); 
     if (!canvas || typeof canvas.toDataURL !== "function") return;
 
     const pngUrl = canvas
@@ -14,28 +14,28 @@ const QrPopup = ({ url, onClose }) => {
     const downloadLink = document.createElement("a");
     downloadLink.href = pngUrl;
     downloadLink.download = "qr-code.png";
-    downloadLink.click(); // 
+    downloadLink.click();
   };
 
   return (
     <div className="qr-popup-overlay">
-        <div className="qr-popup-content">
-            <span className="qr-close" onClick={onClose}>×</span>
+      <div className="qr-popup-content">
+        <span className="qr-close" onClick={onClose}>×</span>
 
-            <QRCodeCanvas
-            value={url}
-            size={180}
-            bgColor={"#FFFFFF"}
-            fgColor={"#000000"}
-            level={"H"}
-            includeMargin={true}
-            id="qrCodeCanvas"
-            />
+        <QRCodeCanvas
+          value={url}
+          size={180}
+          bgColor={"#FFFFFF"}
+          fgColor={"#000000"}
+          level={"H"}
+          includeMargin={true}
+          id="qrCodeCanvas" 
+        />
 
-            <button className="qr-popup-button" onClick={downloadQR}>
-            Download QR
-            </button>
-        </div>
+        <button className="qr-popup-button" onClick={downloadQR}>
+          Download QR
+        </button>
+      </div>
     </div>
   );
 };
