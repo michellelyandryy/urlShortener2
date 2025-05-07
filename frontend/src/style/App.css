@@ -1,0 +1,12 @@
+.grid-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  height: 100vh;
+}
+
+.content {
+  background-color: #0f172a;
+  color: white;
+  padding: 2rem;
+  overflow-y: auto;
+}
