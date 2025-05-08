@@ -2,14 +2,14 @@ import pool from '../config/db.js';
 
 //increments counter
 export const incrementCounter = async (link_id) => {
-    try{   
-        await pool.query(
-        `INSERT INTO counter (link-id, count)
-        VALUES (?, 0)
-        ON DUPLICATE KEY UPDATE count = count + 1`,
-        [link_id]);
+    try {
+        await pool.query(`
+        INSERT INTO counter (link_id, \`count\`) 
+        VALUES (?, 1) 
+        ON DUPLICATE KEY UPDATE \`count\` = \`count\` + 1
+        `, [link_id]);
     } catch (error) {
-        console.error('Error incrementing counter:', error);
+        console.error('Counter increment failed:', error);
         throw error;
     }
 };
