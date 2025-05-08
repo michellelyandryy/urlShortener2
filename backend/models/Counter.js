@@ -56,8 +56,7 @@ export const getSummary = async (link_id) => {
             l.long_link,
             l.created_at,
             COALESCE(s.total_clicks, 0) AS total_clicks,
-            s.last_clicked_at,
-            (SELECT COUNT(*) FROM click_logs WHERE link_id = l.id) AS verified_count
+            s.last_clicked_at
         FROM links l
         LEFT JOIN click_summary s ON l.id = s.link_id
         WHERE l.short_link = ?`,

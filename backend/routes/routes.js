@@ -6,7 +6,6 @@ import {
     deleteShortLink,
     getAllLinks
 } from '../controllers/linkController.js';
-
 const router = express.Router();
 
 //make link
