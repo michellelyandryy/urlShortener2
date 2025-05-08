@@ -1,8 +1,8 @@
 //url validation
 export const isValidLink = (link) => {
-    try{
-        new URL(link);
-        return true;
+    try {
+        const validLink = new URL(link);
+        return validLink.protocol === "http:" || validLink.protocol === "https:";
     } catch {
         return false;
     }

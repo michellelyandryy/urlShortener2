@@ -1,12 +1,16 @@
 import pool from '../config/db.js';
-import { generateBase62Code, decodeBase62Code } from '../utils/helpers.js';
+import { generateBase62Code, decodeBase62Code, isValidLink } from '../utils/helpers.js';
 
-// Create link with retry logic to avoid duplicate short_link
+// make link
 export const createLink = async (long_link) => {
-  const maxRetries = 5;
-  let attempt = 0;
 
-  while (attempt < maxRetries) {
+  if(!isValidLink(long_link)){
+    return {
+      success: false, 
+      message: "Invalid link"
+    }
+  }
+
     const [latestId] = await pool.query('SELECT MAX(id) AS maxId FROM links');
     const nextId = (latestId[0].maxId || 0) + 1 + attempt;
     const shortCode = generateBase62Code(nextId);
@@ -30,19 +34,16 @@ export const createLink = async (long_link) => {
         throw error;
       }
     }
-  }
-
-  throw new Error('Failed to generate a unique short link after multiple attempts.');
 };
-
 
 export const fetchAllLinks = async () => {
   const [rows] = await pool.query('SELECT id, long_link, short_link FROM links');
   return rows;
 }
-// Get link by short code
+
+// get linkkkkk
 export const getLink = async (short_link) => {
-  const shortCode = short_link; // expected to be clean, not prefixed
+  const shortCode = short_link; 
   const decoded = decodeBase62Code(shortCode);
 
   const [rows] = await pool.query(
@@ -104,7 +105,10 @@ export const deleteLink = async (short_link) => {
     } catch (error){
       //no orphan record
       await conn.rollback();
-      return { success: false, message: 'Short link not found' };
+      return { 
+        success: false, 
+        message: 'Short link not found' 
+      };
     } finally {
     if (conn) conn.release();
   }
