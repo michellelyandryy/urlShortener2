@@ -42,7 +42,7 @@ export const fetchAllLinks = async () => {
 
 // get linkkkkk
 export const getLink = async (short_link) => {
-  const shortCode = short_link; 
+  const shortCode = short_link.replace('short.ly/', ''); 
   const decoded = decodeBase62Code(shortCode);
 
   const [rows] = await pool.query(
