@@ -1,92 +1,53 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { FaLink } from "react-icons/fa";
 import "../style/analyticsPage.css";
-import axios from "axios";
-
-// const AnalyticsPage = () => {
-//     const [data, setData] = useState(null);
-  
-//     useEffect(() => {
-//       // Fetch analytics data
-//       axios.get("http://localhost:5000/api/analytics")
-//         .then(res => setData(res.data))
-//         .catch(err => console.error("Failed to load analytics", err));
-//     }, []);
-  
-//     if (!data) {
-//       return <p style={{ color: "#94a3b8" }}>Loading analytics...</p>;
-//     }
-  
-//     return (
-//       <div className="analytics-page">
-//         <h2>Analytics: URL Summary</h2>
-  
-//         <div className="analytics-section">
-//           <div className="analytics-card">
-//             <p className="label">Most Clicked URL</p>
-//             <div className="url-display">
-//               <FaLink />
-//               <span className="url">{data.mostClicked}</span>
-//             </div>
-//           </div>
-  
-//           <div className="analytics-card">
-//             <p className="label">Least Clicked URL</p>
-//             <div className="url-display">
-//               <FaLink />
-//               <span className="url">{data.leastClicked}</span>
-//             </div>
-//           </div>
-  
-//           <div className="analytics-card">
-//             <p className="label">Recently clicked</p>
-//             <div className="url-display">
-//               <FaLink />
-//               <span className="url">{data.recentlyClicked}</span>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     );
-//   };
 
 const AnalyticsPage = () => {
-    // 🧪 Mock data for now
-    const mostClicked = "short.ly/dsajdkh";
-    const leastClicked = "short.ly/dhsakjhs";
-    const recentlyClicked = "short.ly/djsajk";
+  const [data, setData] = useState({
+    mostClicked: null,
+    leastClicked: null,
+    recentClick: null, // ✅ fixed typo here
+  });
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    console.log("📡 Attempting to fetch analytics...");
   
-    return (
-      <div className="analytics-page">
-        <h2>Click Analytics</h2>
+    axios.get("http://localhost:5000/api/analytics")
+      .then(res => {
+        console.log("Analytics data received:", res.data);
+        setData(res.data);
+      })
+      .catch(err => {
+        console.error("Analytics fetch error:", err);
+        setError("Failed to fetch analytics.");
+      });
+  }, []);
   
-        <div className="analytics-section">
-          <div className="analytics-card">
-            <p className="label">Most Clicked URL</p>
-            <div className="url-display">
-              <FaLink />
-              <span className="url">{mostClicked}</span>
-            </div>
-          </div>
-  
-          <div className="analytics-card">
-            <p className="label">Least Clicked URL</p>
-            <div className="url-display">
-              <FaLink />
-              <span className="url">{leastClicked}</span>
-            </div>
-          </div>
-  
-          <div className="analytics-card">
-            <p className="label">Recently clicked</p>
-            <div className="url-display">
-              <FaLink />
-              <span className="url">{recentlyClicked}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-  
-  export default AnalyticsPage;
+
+  const renderCard = (label, short_link) => (
+    <div className="card">
+      <h4>{label}</h4>
+      {short_link ? (
+        <a href={`http://localhost:5000/${short_link}`} target="_blank" rel="noopener noreferrer">
+          <FaLink /> short.ly/{short_link}
+        </a>
+      ) : (
+        <p>Not available</p>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="analytics">
+      <h2>Click Analytics</h2>
+      {error && <p className="error">{error}</p>}
+      {renderCard("Most Clicked URL", data.mostClicked?.short_link)}
+      {renderCard("Least Clicked URL", data.leastClicked?.short_link)}
+      {renderCard("Recently Clicked", data.recentClick?.short_link)} {/* ✅ fixed this line */}
+    </div>
+  );
+};
+
+export default AnalyticsPage;

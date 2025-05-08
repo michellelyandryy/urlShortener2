@@ -1,26 +1,23 @@
 import express from 'express';
 import {
-    createShortLink,
-    redirectToLongLink,
-    getLinkSummary,
-    deleteShortLink,
-    getAllLinks
+  createShortLink,
+  redirectToLongLink,
+  getLinkSummary,
+  deleteShortLink,
+  getAllLinks,
+  getAnalyticsSummary
 } from '../controllers/linkController.js';
+
 const router = express.Router();
 
-//make link
-router.post('/', createShortLink);
-
-//grab all link
+// 📌 These must be at the top to prevent being overridden by /:short_link
+router.get('/analytics', getAnalyticsSummary);
 router.get('/', getAllLinks);
 
-//for redirect
+// Short link operations
+router.post('/', createShortLink);
 router.get('/:short_link', redirectToLongLink);
-
-//for counter
 router.get('/:short_link/count', getLinkSummary);
-
-//for del link
 router.delete('/:short_link', deleteShortLink);
 
 export default router;
