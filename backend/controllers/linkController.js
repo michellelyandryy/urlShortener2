@@ -12,17 +12,17 @@ import {
 
 export const createShortLink = async (req, res) => {
   try {
-    const { long_link, custom_alias } = req.body;
+    const { long_link } = req.body;
     if (!long_link) {
       return res.status(400).json({ message: "original link is required" });
     }
 
-    const { id, short_link } = await createLink(long_link, custom_alias);
+    const { id, short_link } = await createLink(long_link);
     res.status(201).json({ id, short_link, long_link });
-  } catch (error) {
-    console.error("Error creating short link:", error);
-    res.status(500).json({ message: "Issue creating short link" });
-  }
+    } catch (error) {
+        console.error("Error creating short link:", error);
+        res.status(500).json({ message: "Issue creating short link" });
+    }
 };
 
 export const getAllLinks = async (req, res) => {
@@ -34,9 +34,6 @@ export const getAllLinks = async (req, res) => {
     res.status(500).json({ message: "Failed to get links from database" });
   }
 };
-
-// other exports remain unchanged
-
 
 //redirection
 export const redirectToLongLink = async (req, res) => {
