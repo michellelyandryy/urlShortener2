@@ -4,6 +4,7 @@ CREATE TABLE links (
   short_link VARCHAR(10) UNIQUE NOT NULL,  -- Base62 code
   long_link TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  -- is_custom BOOLEAN
 );
 
 -- for analytics, 

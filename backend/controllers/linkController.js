@@ -78,22 +78,15 @@ export const redirectToLongLink = async (req, res) => {
 export const getLinkSummary = async (req, res) => {
     try{
         const {short_link} = req.params;
+        const summary = await getSummary(short_link);
 
-        //get link id
-        const [link] = await getLink(short_link);
-        if(!link){
-            return res.status(404).json({ message: 'Link not foudn'})
+        const recent = await getRecentClick(short_link.id);
+
+        if(!summary){
+            return res.status(404).json({ message: "Link not found"});
         }
 
-        const summary = await getSummary(link.id);
-
-        const recent = await getRecentClick(link.id, 10);
-
-        res.status(200).json({
-            ...link,
-            ...summary,
-            recent_clicks: recent
-        });
+        res.json(summary);
     } catch (error) {
         console.error('Error fetching summary:', error);
         res.status(500).json({ message: "Something went wrong fetching data"});

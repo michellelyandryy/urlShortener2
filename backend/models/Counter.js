@@ -51,12 +51,21 @@ export const getSummary = async (link_id) => {
     try{
         const [summary] = await pool.query(
         `SELECT 
-            total_clicks, 
-            last_clicked_at
-        FROM click_summary
-        WHERE link_id = ?`,
+            l.id AS link_id,
+            l.short_link,
+            l.long_link,
+            l.created_at,
+            COALESCE(s.total_clicks, 0) AS total_clicks,
+            s.last_clicked_at,
+            (SELECT COUNT(*) FROM click_logs WHERE link_id = l.id) AS verified_count
+        FROM links l
+        LEFT JOIN click_summary s ON l.id = s.link_id
+        WHERE l.short_link = ?`,
         [link_id]);
 
+        if(!summary[0]) return null;
+
+        
         return summary[0] || {total_clicks: 0, last_clicked_at: null};
     } catch (error) {
         console.error('Error fetching click summary:', error);

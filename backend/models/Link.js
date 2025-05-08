@@ -20,15 +20,19 @@ export const createLink = async (long_link) => {
 
 //searches for link
 export const getLink = async (short_link) => {
+  try {
+    const shortCode = short_link  //.replace('short.ly/', '');
+    const decoded = decodeBase62Code(shortCode);
 
-  const shortCode = short_link  //.replace('short.ly/', '');
-  const decoded = decodeBase62Code(shortCode);
-
-  const [rows] = await pool.query(
-    'SELECT id, long_link FROM links WHERE id = ?',
-    [decoded]
-  );
-  return rows[0];
+    const [rows] = await pool.query(
+      'SELECT id, long_link FROM links WHERE id = ?',
+      [decoded]
+    );
+    return rows[0];
+  } catch (error){
+    console.error('Error fetching link:', error);
+    throw error;
+  }
 };
 
 //rm link
