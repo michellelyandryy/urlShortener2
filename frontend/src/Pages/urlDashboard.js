@@ -6,7 +6,6 @@ import LinkCard from "../Components/linkCard";
 import axios from "axios";
 
 const UrlDashboard = () => {
-  // State declarations
   const [urlInput, setUrlInput] = useState("");
   const [aliasInput, setAliasInput] = useState("");
   const [links, setLinks] = useState([]);
@@ -16,7 +15,7 @@ const UrlDashboard = () => {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch links on component mount
+  // Fetch all existing links
   useEffect(() => {
     const fetchLinks = async () => {
       setIsLoading(true);
@@ -25,47 +24,38 @@ const UrlDashboard = () => {
         setLinks(response.data);
       } catch (error) {
         console.error("Failed to fetch links:", error);
-        setError("Failed to load URLs. Please refresh the page.");
+        setError("Failed to load URLs from the server.");
       } finally {
         setIsLoading(false);
       }
     };
-    
     fetchLinks();
   }, []);
 
   const handleShorten = async () => {
-    if (!urlInput.trim()) {
-      setError("Please enter a URL");
-      return;
-    }
-    
+    if (!urlInput.trim()) return;
     if (aliasInput.length > 20) {
-      setError("Custom alias cannot be longer than 20 characters");
+      alert("Custom alias cannot be longer than 20 characters.");
       return;
     }
-  
-    setIsLoading(true);
+
     try {
-      const res = await axios.post("http://localhost:5000/api/links/", {
+      const res = await axios.post("http://localhost:5000/api/links", {
         long_link: urlInput,
-        custom_alias: aliasInput || undefined
+        custom_alias: aliasInput
       });
 
-      setLinks(prevLinks => [...prevLinks, {
-        originalUrl: res.data.long_link,
-        shortUrl: res.data.short_link,
-        customAlias: res.data.custom_alias || ""
-      }]);
-      
-      setUrlInput("");
-      setAliasInput("");
-      setError(null);
+      if (res.status === 200 || res.status === 201) {
+        setLinks([...links, res.data]);
+        setUrlInput("");
+        setAliasInput("");
+        setError(null);
+      } else {
+        alert("Unexpected server response.");
+      }
     } catch (err) {
       console.error("Shorten error:", err);
       setError(err.response?.data?.message || "Failed to shorten URL");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -85,15 +75,15 @@ const UrlDashboard = () => {
     const validUrls = batchInputs.filter(url => url.trim() !== "");
 
     if (validUrls.length < 2) {
-      setError("Please enter at least 2 valid URLs");
+      setError("Please enter at least 2 valid URLs.");
       return;
     }
 
     setIsLoading(true);
     try {
       const batchResponses = await Promise.all(
-        validUrls.map(url => 
-          axios.post("http://localhost:5000/api/links/batch", {
+        validUrls.map(url =>
+          axios.post("http://localhost:5000/api/links", {
             long_link: url
           })
         )
@@ -131,8 +121,8 @@ const UrlDashboard = () => {
 
       <div className="dashboard-header">
         <h2>URL Shortener</h2>
-        <button 
-          className="btn-batch" 
+        <button
+          className="btn-batch"
           onClick={() => setShowBatch(true)}
           disabled={isLoading}
         >
@@ -156,8 +146,8 @@ const UrlDashboard = () => {
           maxLength={20}
           disabled={isLoading}
         />
-        <button 
-          className="btn-shorten" 
+        <button
+          className="btn-shorten"
           onClick={handleShorten}
           disabled={isLoading}
         >
@@ -165,11 +155,7 @@ const UrlDashboard = () => {
         </button>
       </div>
 
-      {error && (
-        <div className="error-message">
-          {error}
-        </div>
-      )}
+      {error && <div className="error-message">{error}</div>}
 
       {isLoading && links.length === 0 ? (
         <div className="loading-message">Loading your URLs...</div>
@@ -178,11 +164,11 @@ const UrlDashboard = () => {
       ) : (
         <div className="url-list">
           {links.map((link, index) => (
-            <div className="url-batch-inner" key={`link-${link.shortUrl || index}`}>
+            <div className="url-batch-inner" key={`link-${link.short_link || index}`}>
               <LinkCard
-                originalUrl={link.originalUrl || link.long_link}
-                shortUrl={link.shortUrl || link.short_link}
-                customAlias={link.customAlias || link.custom_alias}
+                originalUrl={link.long_link}
+                shortUrl={link.short_link}
+                customAlias={link.custom_alias || ""}
               />
             </div>
           ))}

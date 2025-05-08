@@ -1,99 +1,100 @@
-// import shortid from 'shortid';
 import pool from '../config/db.js';
 import { generateBase62Code, decodeBase62Code } from '../utils/helpers.js';
 
-//make link
+// Create link with retry logic to avoid duplicate short_link
 export const createLink = async (long_link) => {
+  const maxRetries = 5;
+  let attempt = 0;
 
-  const [latestId] = await pool.query('SELECT MAX(id) AS maxId FROM links');
-  const nextId = (latestId[0].maxId || 0) + 1; //get next id
-  const short_link = generateBase62Code(nextId);
+  while (attempt < maxRetries) {
+    const [latestId] = await pool.query('SELECT MAX(id) AS maxId FROM links');
+    const nextId = (latestId[0].maxId || 0) + 1 + attempt;
+    const shortCode = generateBase62Code(nextId);
 
-  const [result] = await pool.query(
-    'INSERT INTO links (long_link, short_link) VALUES (?, ?)',
-    [long_link, short_link]
-  );
+    try {
+      const [result] = await pool.query(
+        'INSERT INTO links (long_link, short_link) VALUES (?, ?)',
+        [long_link, shortCode]
+      );
 
-  return {
-    id: result.insertId, short_link: `short.ly/${short_link}`};
+      return {
+        id: result.insertId,
+        short_link: `short.ly/${shortCode}`
+      };
+
+    } catch (error) {
+      if (error.code === 'ER_DUP_ENTRY') {
+        console.warn(`Duplicate short link '${shortCode}' detected. Retrying...`);
+        attempt++;
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  throw new Error('Failed to generate a unique short link after multiple attempts.');
 };
 
-//searches for link
-export const getLink = async (short_link) => {
 
-  const shortCode = short_link  //.replace('short.ly/', '');
+export const fetchAllLinks = async () => {
+  const [rows] = await pool.query('SELECT id, long_link, short_link FROM links');
+  return rows;
+}
+// Get link by short code
+export const getLink = async (short_link) => {
+  const shortCode = short_link; // expected to be clean, not prefixed
   const decoded = decodeBase62Code(shortCode);
 
   const [rows] = await pool.query(
     'SELECT id, long_link FROM links WHERE id = ?',
     [decoded]
   );
+
   return rows[0];
 };
 
-//rm link
+// Delete link logic remains unchanged
 export const deleteLink = async (short_link) => {
   let conn;
-  try{  
+  try {
     const shortCode = short_link.replace('short.ly/', '');
-
-    //validate syntax
-    // if (!shortCode || !/^[a-zA-Z0-9]{6}$/.test(shortCode)) {
-    //   return { success: false, message: 'Invalid short URL format' };
-    // }
 
     conn = await pool.getConnection();
     await conn.beginTransaction();
 
-    try{
+    const [link] = await conn.query(
+      'SELECT id FROM links WHERE short_link = ?',
+      [shortCode]
+    );
 
-      //check if link exists
-      const [link] = await conn.query(
-        'SELECT id FROM links WHERE short_link = ?',
-        [shortCode]
-      );
-
-      if(link.length === 0){
-        await conn.rollback();
-        return {
-          success: false, message: 'Short link not found'
-        };
-      }
-
-      //delete counter first
-      await conn.query(
-        'DELETE FROM counter WHERE link_id = (SELECT id FROM links WHERE short_link = ?)',
-        [link[0].id]
-      );
-
-      //rm link
-      const [result] = await conn.query(
-        'DELETE FROM links WHERE short_link = ?',
-        [shortCode]
-      );
-
-      await conn.commit();
-      return result.affectedRows > 0 ? {
-        success: true, message: "Yay, short url deleted"
-      } 
-      :{
-        success: false, message: "Darn, deletion failed"
-      };
-
-    } catch (error){
-      //no orphan record
+    if (link.length === 0) {
       await conn.rollback();
-      throw error;
-    } finally {
-      //relesse conn
-      conn.release();
+      return { success: false, message: 'Short link not found' };
     }
 
+    await conn.query(
+      'DELETE FROM counter WHERE link_id = (SELECT id FROM links WHERE short_link = ?)',
+      [shortCode]
+    );
+
+    const [result] = await conn.query(
+      'DELETE FROM links WHERE short_link = ?',
+      [shortCode]
+    );
+
+    await conn.commit();
+    return result.affectedRows > 0
+      ? { success: true, message: "Short URL deleted" }
+      : { success: false, message: "Deletion failed" };
+
   } catch (error) {
+    if (conn) await conn.rollback();
     console.error('Delete failed:', error);
-    return{
+    return {
       success: false,
-      message: 'Server error during deleting process',
+      message: 'Server error during delete'
     };
+  } finally {
+    if (conn) conn.release();
   }
 };
