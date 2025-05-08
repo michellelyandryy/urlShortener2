@@ -4,6 +4,8 @@ import "../style/urlDashboard.css";
 import BatchModal from "../Components/batchForm.js"; 
 import LinkCard from "../Components/linkCard";
 import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const UrlDashboard = () => {
   const [urlInput, setUrlInput] = useState("");
@@ -168,7 +170,7 @@ const UrlDashboard = () => {
               <LinkCard
                 originalUrl={link.long_link}
                 shortUrl={link.short_link}
-                customAlias={link.custom_alias || ""}
+                onCopy={(copiedText) => toast.success(`Copied: ${copiedText}`)}
               />
             </div>
           ))}
@@ -196,6 +198,7 @@ const UrlDashboard = () => {
           ))}
         </div>
       )}
+      <ToastContainer position="top-center" autoClose={2000} />
     </div>
   );
 };
