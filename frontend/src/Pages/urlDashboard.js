@@ -111,55 +111,14 @@ return (
             <LinkCard
               originalUrl={link.long_link}
               shortUrl={link.short_link}
-              // customAlias={link.custom_alias || ""}
+              onCopy={(copiedText) => toast.success(`Copied: ${copiedText}`)}
             />
           </div>
         ))}
       </div>
     )}
-  </div>
-);
-      {isLoading && links.length === 0 ? (
-        <div className="loading-message">Loading your URLs...</div>
-      ) : links.length === 0 && batches.length === 0 ? (
-        <p className="empty-message">No URLs yet. Try shortening one above.</p>
-      ) : (
-        <div className="url-list">
-          {links.map((link, index) => (
-            <div className="url-batch-inner" key={`link-${link.short_link || index}`}>
-              <LinkCard
-                originalUrl={link.long_link}
-                shortUrl={link.short_link}
-                onCopy={(copiedText) => toast.success(`Copied: ${copiedText}`)}
-              />
-            </div>
-          ))}
-
-          {batches.map((batch, batchIndex) => (
-            <div className="url-batch" key={`batch-${batchIndex}`}>
-              {batch.map((link, index) => (
-                <div className="url-card" key={`batch-${batchIndex}-link-${index}`}>
-                  <div>
-                    <p className="label">Original URL</p>
-                    <p>{link.originalUrl}</p>
-                  </div>
-                  <div>
-                    <p className="label">ShortURL</p>
-                    <p>{link.shortUrl}</p>
-                  </div>
-                  <div className="actions">
-                    <button title="QR"><FaQrcode /></button>
-                    <button title="Copy"><FaCopy /></button>
-                    <button title="Delete"><FaTrash /></button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      )}
       <ToastContainer position="top-center" autoClose={2000} />
-    </div>
+  </div>
   );
 };
 
