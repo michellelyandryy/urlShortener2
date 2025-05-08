@@ -2,15 +2,28 @@ import React, { use, useState } from "react";
 import { FaQrcode, FaCopy, FaTrash } from "react-icons/fa";
 import "../style/urlDashboard.css";
 import QrPopup from "./qrPopup";
-
+import { deleteShortLink } from "../api/api";
 
 const LinkCard = ({ 
   originalUrl, 
   shortUrl, 
   customAlias, 
-  onShowQR, 
   onCopy, 
-  onDelete }) => {
+  onDeleteSuccess }) => {
+
+  const handleDelete = async () => {
+    try{
+      if(!window.confirm("Are you sure you want to delete the link?")) return;
+
+      await deleteShortLink(shortUrl);
+
+      if(onDeleteSuccess) onDeleteSuccess(shortUrl);
+
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert(error.message || "Failed to delete. Please try again");
+    }
+  };
 
   const [showQRPopup, setShowQRPopup] = useState(false);
   const toggleQRPopup = () => {
@@ -54,7 +67,7 @@ const LinkCard = ({
         <button title="Copy" onClick={handleCopy}>
           <FaCopy />
         </button>
-        <button title="Delete" onClick={onDelete}>
+        <button title="Delete" onClick={handleDelete}>
           <FaTrash />
         </button>
       </div>
