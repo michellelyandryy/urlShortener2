@@ -119,6 +119,13 @@
     background-color: #475569;
     transform: scale(1.03);
   }
+
+  .link-text {
+    color: #60a5fa; /* Light blue */
+    text-decoration: underline;
+    word-break: break-word;
+  }
+  
   
   
   

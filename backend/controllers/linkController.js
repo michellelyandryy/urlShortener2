@@ -42,7 +42,7 @@ export const redirectToLongLink = async (req, res) => {
         //getLink from model 
         const link = await getLink(short_link);
         if(!link){
-            return res.status(404).json({ message: 'Link not foudn'});
+            return res.status(404).json({ message: 'Link not found'});
         }
 
         //put up +1 on counter
