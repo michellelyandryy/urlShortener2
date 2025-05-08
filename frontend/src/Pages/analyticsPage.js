@@ -7,13 +7,13 @@ const AnalyticsPage = () => {
   const [data, setData] = useState({
     mostClicked: null,
     leastClicked: null,
-    recentClick: null, // ✅ fixed typo here
+    recentClick: null,
   });
   const [error, setError] = useState(null);
 
   useEffect(() => {
     console.log("📡 Attempting to fetch analytics...");
-  
+
     axios.get("http://localhost:5000/api/analytics")
       .then(res => {
         console.log("Analytics data received:", res.data);
@@ -24,14 +24,18 @@ const AnalyticsPage = () => {
         setError("Failed to fetch analytics.");
       });
   }, []);
-  
 
-  const renderCard = (label, short_link) => (
+  const renderCard = (label, linkObj) => (
     <div className="card">
       <h4>{label}</h4>
-      {short_link ? (
-        <a href={`http://localhost:5000/${short_link}`} target="_blank" rel="noopener noreferrer">
-          <FaLink /> short.ly/{short_link}
+      {linkObj ? (
+        <a
+          href={`http://localhost:5000/${linkObj.short_link}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <FaLink style={{ marginRight: "0.5rem" }} />
+          short.ly/{linkObj.short_link}
         </a>
       ) : (
         <p>Not available</p>
@@ -41,11 +45,11 @@ const AnalyticsPage = () => {
 
   return (
     <div className="analytics">
-      <h2>Click Analytics</h2>
+      <h2>Analytics: URL NAME</h2>
       {error && <p className="error">{error}</p>}
-      {renderCard("Most Clicked URL", data.mostClicked?.short_link)}
-      {renderCard("Least Clicked URL", data.leastClicked?.short_link)}
-      {renderCard("Recently Clicked", data.recentClick?.short_link)} {/* ✅ fixed this line */}
+      {renderCard("Most Clicked URL", data.mostClicked)}
+      {renderCard("Least Clicked URL", data.leastClicked)}
+      {renderCard("Recently Clicked", data.recentClick)}
     </div>
   );
 };
