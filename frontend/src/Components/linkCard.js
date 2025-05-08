@@ -31,7 +31,7 @@ const LinkCard = ({
   };
 
   const handleCopy = () => {
-    const textToCopy = customAlias || shortUrl;
+    const textToCopy = shortUrl;
     navigator.clipboard.writeText(textToCopy);
     if (onCopy) onCopy(textToCopy);
   };
@@ -57,7 +57,7 @@ const LinkCard = ({
           rel="noopener noreferrer"
           className="link-text"
         >
-          {customAlias || shortUrl}
+          {shortUrl}
         </a>
       </div>
       <div className="actions">
@@ -74,7 +74,7 @@ const LinkCard = ({
       {/* conditional rendering QR */}
       {showQRPopup && (
         <QrPopup
-          url={customAlias || shortUrl}
+          url={shortUrl}
           onClose={() => setShowQRPopup(false)}
         />
       )}
