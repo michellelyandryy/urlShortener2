@@ -43,8 +43,8 @@ export const fetchAllLinks = async () => {
 // get linkkkkk
 export const getLink = async (short_link) => {
 
-  const shortCode = short_link.includes('short.ly/')
-    ? short_link.replace('short.ly/', '')
+  const match = short_link.match(/(?:short\.ly\/)?(\w+)/);
+  const shortCode = match ? match[1]
     : short_link;
   const decoded = decodeBase62Code(shortCode.trim());
 
@@ -63,7 +63,7 @@ export const deleteLink = async (short_link) => {
     const shortCode = short_link.includes('short.ly/')
     ? short_link.replace('short.ly/', '')
     : short_link;
-    
+
     conn = await pool.getConnection();
     await conn.beginTransaction();
 

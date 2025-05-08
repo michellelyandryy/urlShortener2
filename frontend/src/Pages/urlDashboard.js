@@ -6,7 +6,7 @@ import axios from "axios";
 
 const UrlDashboard = () => {
   const [urlInput, setUrlInput] = useState("");
-  const [aliasInput, setAliasInput] = useState("");
+  // const [aliasInput, setAliasInput] = useState("");
   const [links, setLinks] = useState([]);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,13 +48,13 @@ const UrlDashboard = () => {
     try {
       const res = await axios.post("http://localhost:5000/api/links", {
         long_link: urlInput,
-        custom_alias: aliasInput
+        // custom_alias: aliasInput
       });
 
       if (res.status === 200 || res.status === 201) {
         setLinks([...links, res.data]);
         setUrlInput("");
-        setAliasInput("");
+        // setAliasInput("");
         setError(null);
       } else {
         alert("Unexpected server response.");
@@ -79,14 +79,14 @@ return (
         onChange={(e) => setUrlInput(e.target.value)}
         disabled={isLoading}
       />
-      <input
+      {/* <input
         type="text"
         placeholder="Custom Alias (optional)"
         value={aliasInput}
         onChange={(e) => setAliasInput(e.target.value)}
         maxLength={20}
         disabled={isLoading}
-      />
+      /> */}
       <button
         className="btn-shorten"
         onClick={handleShorten}
@@ -109,7 +109,7 @@ return (
             <LinkCard
               originalUrl={link.long_link}
               shortUrl={link.short_link}
-              customAlias={link.custom_alias || ""}
+              // customAlias={link.custom_alias || ""}
             />
           </div>
         ))}
