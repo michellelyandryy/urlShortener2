@@ -2,28 +2,83 @@ import pool from '../config/db.js';
 
 //increments counter
 export const incrementCounter = async (link_id) => {
+    const conn = await pool.getConnection();
+
     try {
-        await pool.query(`
-        INSERT INTO counter (link_id, \`count\`) 
-        VALUES (?, 1) 
-        ON DUPLICATE KEY UPDATE \`count\` = \`count\` + 1
-        `, [link_id]);
+        await conn.beginTransaction();
+
+        //record log
+        await conn.query(
+            'INSERT INTO click_logs(link_id) VALUES (?)',
+            [link_id]
+        );
+
+        //update summary with current timestamp + total click
+        await conn.query(
+           ` INSERT INTO click_summary (link_id, last_clicked_at, total_clicks) 
+            VALUES (?, CURRENT_TIMESTAMP, 1)
+            ON DUPLICATE KEY UPDATE
+              last_clicked_at = CURRENT_TIMESTAMP,
+              total_clicks = total_clicks + 1`,
+              [link_id, new Date()]
+        );
+
+        await conn.commit();
     } catch (error) {
+        await conn.rollback();
         console.error('Counter increment failed:', error);
         throw error;
+    } finally {
+        conn.release();
     }
 };
 
 //counts for total links 
-export const getCount = async (link_id) => {
-    try {    
-        const [rows] = await pool.query(
-            'SELECT count FROM counter WHERE link_id = ?',
-            [link_id]
-        );
-        return rows[0]?.count || 0;
+// export const getCount = async (link_id) => {
+//     try {    
+//         const [rows] = await pool.query(
+//             'SELECT total_clicks FROM click_summary WHERE link_id = ?',
+//             [link_id]
+//         );
+//         return rows[0]?.count || 0;
+//     } catch (error) {
+//         console.error('Error fetching counter:', error);
+//         throw error;
+//     }
+// };
+
+export const getSummary = async (link_id) => {
+    try{
+        const [summary] = await pool.query(
+        `SELECT 
+            l.id AS link_id,
+            l.short_link,
+            l.long_link,
+            l.created_at,
+            COALESCE(s.total_clicks, 0) AS total_clicks,
+            s.last_clicked_at,
+            (SELECT COUNT(*) FROM click_logs WHERE link_id = l.id) AS verified_count
+        FROM links l
+        LEFT JOIN click_summary s ON l.id = s.link_id
+        WHERE l.short_link = ?`,
+        [link_id]);
+
+        if(!summary[0]) return null;
+
+        
+        return summary[0] || {total_clicks: 0, last_clicked_at: null};
     } catch (error) {
-        console.error('Error fetching counter:', error);
+        console.error('Error fetching click summary:', error);
         throw error;
     }
+}
+
+export const getRecentClick = async (link_id, limit = 10) => {
+    const [rows] = await pool.query(
+      `SELECT link_id, clicked_at
+      FROM click_logs WHERE link_id = ?
+      ORDER BY clicked_at DESC LIMIT ?`,
+      [link_id, limit]
+    );
+    return rows;
 };

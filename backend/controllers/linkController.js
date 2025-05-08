@@ -1,5 +1,14 @@
-import { createLink, getLink, deleteLink, fetchAllLinks } from "../models/Link.js";
-import { incrementCounter, getCount } from "../models/Counter.js";
+import { 
+    createLink, 
+    getLink,
+    deleteLink,
+    fetchAllLinks
+ } from "../models/Link.js";
+import { 
+    incrementCounter, 
+    getSummary, 
+    getRecentClick
+} from "../models/Counter.js";
 
 export const createShortLink = async (req, res) => {
   try {
@@ -59,22 +68,41 @@ export const redirectToLongLink = async (req, res) => {
 };
 
 //get counter of the link
-export const getLinkCount = async (req, res) => {
+// export const getLinkCount = async (req, res) => {
+//     try{
+//         const {short_link} = req.params;
+
+//         //get id
+//         const link = await getLink(short_link);
+//         if(!link){
+//             return res.status(404).json({message: 'Link not foudn'});
+//         }
+
+//         //get counter from the model
+//         const count = await getCount(link.id);
+//         res.status(200).json({short_link, long_link: link.long_link, clicks: count});
+//     } catch (error) {
+//         console.error('Error fetching link clicks:',);
+//         res.status(500).json({message: "Something went wrong fetching link clicks"});
+//     }
+// };
+
+//get click summary
+export const getLinkSummary = async (req, res) => {
     try{
         const {short_link} = req.params;
+        const summary = await getSummary(short_link);
 
-        //get id
-        const link = await getLink(short_link);
-        if(!link){
-            return res.status(404).json({message: 'Link not foudn'});
+        const recent = await getRecentClick(short_link.id);
+
+        if(!summary){
+            return res.status(404).json({ message: "Link not found"});
         }
 
-        //get counter from the model
-        const count = await getCount(link.id);
-        res.status(200).json({short_link, long_link: link.long_link, clicks: count});
+        res.json(summary);
     } catch (error) {
-        console.error('Error fetching link clicks:',);
-        res.status(500).json({message: "Something went wrong fetching link clicks"});
+        console.error('Error fetching summary:', error);
+        res.status(500).json({ message: "Something went wrong fetching data"});
     }
 };
 
