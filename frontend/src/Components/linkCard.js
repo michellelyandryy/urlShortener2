@@ -52,7 +52,7 @@ const LinkCard = ({
       <div>
         <p className="label">ShortURL</p>
         <a
-          href={`http://localhost:5000/api/links/${shortUrl.replace("short.ly/", "")}`}
+          href={`http://localhost:5000/api/links/${shortUrl}`}
           target="_blank"
           rel="noopener noreferrer"
           className="link-text"

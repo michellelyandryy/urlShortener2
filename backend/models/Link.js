@@ -42,8 +42,11 @@ export const fetchAllLinks = async () => {
 
 // get linkkkkk
 export const getLink = async (short_link) => {
-  const shortCode = short_link.replace('short.ly/', ''); 
-  const decoded = decodeBase62Code(shortCode);
+
+  const shortCode = short_link.includes('short.ly/')
+    ? short_link.replace('short.ly/', '')
+    : short_link;
+  const decoded = decodeBase62Code(shortCode.trim());
 
   const [rows] = await pool.query(
     'SELECT id, long_link FROM links WHERE id = ?',
@@ -57,8 +60,10 @@ export const getLink = async (short_link) => {
 export const deleteLink = async (short_link) => {
   let conn;
   try {
-    const shortCode = short_link.replace('short.ly/', '');
-
+    const shortCode = short_link.includes('short.ly/')
+    ? short_link.replace('short.ly/', '')
+    : short_link;
+    
     conn = await pool.getConnection();
     await conn.beginTransaction();
 
