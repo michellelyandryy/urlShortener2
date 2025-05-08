@@ -57,7 +57,7 @@ export const getLink = async (short_link) => {
 export const deleteLink = async (short_link) => {
   let conn;
   try {
-    const shortCode = short_link;
+    const shortCode = short_link.replace('short.ly/', '');
 
     conn = await pool.getConnection();
     await conn.beginTransaction();
