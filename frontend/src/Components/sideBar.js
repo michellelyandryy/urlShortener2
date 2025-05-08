@@ -1,4 +1,3 @@
-// src/Components/sideBar.js
 import React from "react";
 import { FaLink, FaChartBar } from "react-icons/fa";
 import "../style/sideBar.css";
@@ -12,7 +11,7 @@ const Sidebar = ({ activePage, setActivePage }) => {
         style={{ cursor: "pointer" }}
       >
         <img src="/logo192.png" alt="Logo" className="logo-img" />
-        <span className="logo-text">Shortly</span>
+        <span className="logo-text">Short.ly</span>
       </div>
 
       <ul className="nav-links">
