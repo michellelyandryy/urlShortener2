@@ -14,7 +14,7 @@ const AnalyticsPage = () => {
   useEffect(() => {
     console.log("📡 Attempting to fetch analytics...");
 
-    axios.get("http://localhost:5000/api/analytics")
+    axios.get("http://localhost:5000/api/links/analytics")
       .then(res => {
         console.log("Analytics data received:", res.data);
         setData(res.data);
@@ -45,7 +45,7 @@ const AnalyticsPage = () => {
 
   return (
     <div className="analytics">
-      <h2>Analytics: URL NAME</h2>
+      <h2>Analytics</h2>
       {error && <p className="error">{error}</p>}
       {renderCard("Most Clicked URL", data.mostClicked)}
       {renderCard("Least Clicked URL", data.leastClicked)}
