@@ -30,7 +30,7 @@ const AnalyticsPage = () => {
       <h4>{label}</h4>
       {linkObj ? (
         <a
-          href={`http://localhost:5000/${linkObj.short_link}`}
+          href={`http://localhost:5000/api/links/${linkObj.short_link}`}
           target="_blank"
           rel="noopener noreferrer"
         >
