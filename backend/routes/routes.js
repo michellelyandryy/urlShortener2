@@ -2,7 +2,7 @@ import express from 'express';
 import {
     createShortLink,
     redirectToLongLink,
-    getLinkCount,
+    getLinkSummary,
     deleteShortLink
 } from '../controllers/linkController.js';
 
@@ -15,7 +15,7 @@ router.post('/', createShortLink);
 router.get('/:short_link', redirectToLongLink);
 
 //for counter
-router.get('/:short_link/count', getLinkCount);
+router.get('/:short_link/count', getLinkSummary);
 
 //for delete
 router.delete('/:short_link', deleteShortLink)

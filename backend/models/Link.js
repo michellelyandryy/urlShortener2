@@ -15,7 +15,7 @@ export const createLink = async (long_link) => {
   );
 
   return {
-    id: result.insertId, short_link: `short.ly/${short_link}`};
+    id: result.insertId, short_link: `${short_link}`};
 };
 
 //searches for link
@@ -35,7 +35,7 @@ export const getLink = async (short_link) => {
 export const deleteLink = async (short_link) => {
   let conn;
   try{  
-    const shortCode = short_link.replace('short.ly/', '');
+    const shortCode = short_link //.replace('short.ly/', '');
 
     //validate syntax
     // if (!shortCode || !/^[a-zA-Z0-9]{6}$/.test(shortCode)) {
@@ -62,7 +62,13 @@ export const deleteLink = async (short_link) => {
 
       //delete counter first
       await conn.query(
-        'DELETE FROM counter WHERE link_id = (SELECT id FROM links WHERE short_link = ?)',
+        'DELETE FROM click_logs WHERE link_id = (SELECT id FROM links WHERE short_link = ?)',
+        [link[0].id]
+      );
+
+      //delete the summary
+      await conn.query(
+        'DELETE FROM click_summary WHERE link_id = (SELECT id FROM links WHERE short_link = ?)',
         [link[0].id]
       );
 
