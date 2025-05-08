@@ -12,7 +12,7 @@ export const createLink = async (long_link) => {
   }
 
     const [latestId] = await pool.query('SELECT MAX(id) AS maxId FROM links');
-    const nextId = (latestId[0].maxId || 0) + 1 + attempt;
+    const nextId = (latestId[0].maxId || 0) + 1;
     const shortCode = generateBase62Code(nextId);
 
     try {
@@ -29,7 +29,6 @@ export const createLink = async (long_link) => {
     } catch (error) {
       if (error.code === 'ER_DUP_ENTRY') {
         console.warn(`Duplicate short link '${shortCode}' detected. Retrying...`);
-        attempt++;
       } else {
         throw error;
       }
