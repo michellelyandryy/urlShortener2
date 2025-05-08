@@ -1,8 +1,22 @@
-import React from "react";
+import React, { use, useState } from "react";
 import { FaQrcode, FaCopy, FaTrash } from "react-icons/fa";
 import "../style/urlDashboard.css";
+import QrPopup from "./qrPopup";
 
-const LinkCard = ({ originalUrl, shortUrl, customAlias, onShowQR, onCopy, onDelete }) => {
+
+const LinkCard = ({ 
+  originalUrl, 
+  shortUrl, 
+  customAlias, 
+  onShowQR, 
+  onCopy, 
+  onDelete }) => {
+
+  const [showQRPopup, setShowQRPopup] = useState(false);
+  const toggleQRPopup = () => {
+    setShowQRPopup(!showQRPopup);
+  };
+
   const handleCopy = () => {
     const textToCopy = customAlias || shortUrl;
     navigator.clipboard.writeText(textToCopy);
@@ -34,7 +48,7 @@ const LinkCard = ({ originalUrl, shortUrl, customAlias, onShowQR, onCopy, onDele
         </a>
       </div>
       <div className="actions">
-        <button title="QR" onClick={() => onShowQR(shortUrl)}>
+        <button title="QR" onClick={toggleQRPopup}>
           <FaQrcode />
         </button>
         <button title="Copy" onClick={handleCopy}>
@@ -44,6 +58,13 @@ const LinkCard = ({ originalUrl, shortUrl, customAlias, onShowQR, onCopy, onDele
           <FaTrash />
         </button>
       </div>
+      {/* conditional rendering QR */}
+      {showQRPopup && (
+        <QrPopup
+          url={customAlias || shortUrl}
+          onClose={() => setShowQRPopup(false)}
+        />
+      )}
     </div>
   );
 };
