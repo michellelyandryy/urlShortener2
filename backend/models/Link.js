@@ -1,55 +1,66 @@
-// import shortid from 'shortid';
 import pool from '../config/db.js';
 import { generateBase62Code, decodeBase62Code } from '../utils/helpers.js';
 
-//make link
+// Create link with retry logic to avoid duplicate short_link
 export const createLink = async (long_link) => {
+  const maxRetries = 5;
+  let attempt = 0;
 
-  const [latestId] = await pool.query('SELECT MAX(id) AS maxId FROM links');
-  const nextId = (latestId[0].maxId || 0) + 1; //get next id
-  const short_link = generateBase62Code(nextId);
+  while (attempt < maxRetries) {
+    const [latestId] = await pool.query('SELECT MAX(id) AS maxId FROM links');
+    const nextId = (latestId[0].maxId || 0) + 1 + attempt;
+    const shortCode = generateBase62Code(nextId);
 
-  const [result] = await pool.query(
-    'INSERT INTO links (long_link, short_link) VALUES (?, ?)',
-    [long_link, short_link]
+    try {
+      const [result] = await pool.query(
+        'INSERT INTO links (long_link, short_link) VALUES (?, ?)',
+        [long_link, shortCode]
+      );
+
+      return {
+        id: result.insertId,
+        short_link: `short.ly/${shortCode}`
+      };
+
+    } catch (error) {
+      if (error.code === 'ER_DUP_ENTRY') {
+        console.warn(`Duplicate short link '${shortCode}' detected. Retrying...`);
+        attempt++;
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  throw new Error('Failed to generate a unique short link after multiple attempts.');
+};
+
+
+export const fetchAllLinks = async () => {
+  const [rows] = await pool.query('SELECT id, long_link, short_link FROM links');
+  return rows;
+}
+// Get link by short code
+export const getLink = async (short_link) => {
+  const shortCode = short_link; // expected to be clean, not prefixed
+  const decoded = decodeBase62Code(shortCode);
+
+  const [rows] = await pool.query(
+    'SELECT id, long_link FROM links WHERE id = ?',
+    [decoded]
   );
 
-  return {
-    id: result.insertId, short_link: `${short_link}`};
+  return rows[0];
 };
 
-//searches for link
-export const getLink = async (short_link) => {
-  try {
-    const shortCode = short_link  //.replace('short.ly/', '');
-    const decoded = decodeBase62Code(shortCode);
-
-    const [rows] = await pool.query(
-      'SELECT id, long_link FROM links WHERE id = ?',
-      [decoded]
-    );
-    return rows[0];
-  } catch (error){
-    console.error('Error fetching link:', error);
-    throw error;
-  }
-};
-
-//rm link
+// Delete link logic remains unchanged
 export const deleteLink = async (short_link) => {
   let conn;
-  try{  
-    const shortCode = short_link //.replace('short.ly/', '');
-
-    //validate syntax
-    // if (!shortCode || !/^[a-zA-Z0-9]{6}$/.test(shortCode)) {
-    //   return { success: false, message: 'Invalid short URL format' };
-    // }
+  try {
+    const shortCode = short_link.replace('short.ly/', '');
 
     conn = await pool.getConnection();
     await conn.beginTransaction();
-
-    try{
 
       //check if link exists
       const [link] = await conn.query(
@@ -93,17 +104,8 @@ export const deleteLink = async (short_link) => {
     } catch (error){
       //no orphan record
       await conn.rollback();
-      throw error;
+      return { success: false, message: 'Short link not found' };
     } finally {
-      //relesse conn
-      conn.release();
-    }
-
-  } catch (error) {
-    console.error('Delete failed:', error);
-    return{
-      success: false,
-      message: 'Server error during deleting process',
-    };
+    if (conn) conn.release();
   }
 };

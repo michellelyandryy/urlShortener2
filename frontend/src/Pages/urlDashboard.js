@@ -3,19 +3,7 @@ import { FaQrcode, FaCopy, FaTrash } from "react-icons/fa";
 import "../style/urlDashboard.css";
 import BatchModal from "../Components/batchForm.js"; 
 import LinkCard from "../Components/linkCard";
-import QrPopup from "../Components/qrPopup.js";
-import { toast } from "react-toastify";
 import axios from "axios";
-
-// Utility function
-const generateShortCode = () => {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < 6; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-};
 
 const UrlDashboard = () => {
   const [urlInput, setUrlInput] = useState("");
@@ -24,49 +12,51 @@ const UrlDashboard = () => {
   const [batches, setBatches] = useState([]);
   const [showBatch, setShowBatch] = useState(false);
   const [batchInputs, setBatchInputs] = useState(["", ""]);
-  const [selectedQR, setSelectedQR] = useState(null); 
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
+  // Fetch all existing links
   useEffect(() => {
-    document.body.classList.toggle("modal-open", showBatch);
-  }, [showBatch]);
+    const fetchLinks = async () => {
+      setIsLoading(true);
+      try {
+        const response = await axios.get("http://localhost:5000/api/links");
+        setLinks(response.data);
+      } catch (error) {
+        console.error("Failed to fetch links:", error);
+        setError("Failed to load URLs from the server.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchLinks();
+  }, []);
 
-  //mock data
-  // const [links, setLinks] = useState([
-  //     {
-  //         originalUrl: "https://example.com/very/long/url/path",
-  //         shortUrl: "short.ly/abc123",
-  //         customAlias: "custom/abc123"
-  //       },
-  //       {
-  //         originalUrl: "https://anotherexample.com/page",
-  //         shortUrl: "short.ly/xyz789"
-  //       }
-  // ]);
-
-  // const [links, setLinks] = useState([]);
-  // useEffect(() => {
-  //     axios.get("/api/urls").then((res) => setLinks(res.data));
-  // }, []);
-
-  const handleShorten = () => {
+  const handleShorten = async () => {
     if (!urlInput.trim()) return;
     if (aliasInput.length > 20) {
       alert("Custom alias cannot be longer than 20 characters.");
       return;
     }
 
-    const newLink = {
-      originalUrl: urlInput,
-      shortUrl: `short.ly/${aliasInput || generateShortCode()}`
-    };
+    try {
+      const res = await axios.post("http://localhost:5000/api/links", {
+        long_link: urlInput,
+        custom_alias: aliasInput
+      });
 
-    if (aliasInput) {
-      newLink.customAlias = `custom/${aliasInput}`;
+      if (res.status === 200 || res.status === 201) {
+        setLinks([...links, res.data]);
+        setUrlInput("");
+        setAliasInput("");
+        setError(null);
+      } else {
+        alert("Unexpected server response.");
+      }
+    } catch (err) {
+      console.error("Shorten error:", err);
+      setError(err.response?.data?.message || "Failed to shorten URL");
     }
-
-    setLinks([...links, newLink]);
-    setUrlInput("");
-    setAliasInput("");
   };
 
   const handleAddBatchInput = () => {
@@ -81,61 +71,61 @@ const UrlDashboard = () => {
     setBatchInputs(updated);
   };
 
-  const handleBatchSubmit = () => {
-    const validUrls = batchInputs.filter((url) => url.trim() !== "");
+  const handleBatchSubmit = async () => {
+    const validUrls = batchInputs.filter(url => url.trim() !== "");
 
     if (validUrls.length < 2) {
-      alert("Please enter at least 2 valid URLs.");
+      setError("Please enter at least 2 valid URLs.");
       return;
     }
 
-    const newLinks = validUrls.map((url) => ({
-      originalUrl: url,
-      shortUrl: `short.ly/${generateShortCode()}`
-    }));
+    setIsLoading(true);
+    try {
+      const batchResponses = await Promise.all(
+        validUrls.map(url =>
+          axios.post("http://localhost:5000/api/links", {
+            long_link: url
+          })
+        )
+      );
 
-    setBatches([...batches, newLinks]); 
-    setBatchInputs(["", ""]);
-    setShowBatch(false);
+      const newLinks = batchResponses.map(res => ({
+        originalUrl: res.data.long_link,
+        shortUrl: res.data.short_link
+      }));
 
-    /*
-    axios.post("/api/urls/batch", {
-      urls: validUrls
-    }).then(() => {
-      setShowBatch(false);
+      setBatches(prev => [...prev, newLinks]);
       setBatchInputs(["", ""]);
-      // Optionally refresh links from backend
-    }).catch((err) => {
-      console.error("Batch submission failed:", err);
-    });
-    */
+      setShowBatch(false);
+      setError(null);
+    } catch (err) {
+      console.error("Batch error:", err);
+      setError("Failed to create batch URLs");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="url-dashboard">
       {showBatch && (
         <BatchModal
-        batchInputs={batchInputs}
-        onClose={() => {
-          setShowBatch(false);
-          setBatchInputs(["", ""]); 
-       }}
-        onAddInput={handleAddBatchInput}
-        onInputChange={handleBatchInputChange}
-        onSubmit={handleBatchSubmit}
-      />
-    )}
-
-      {selectedQR && (
-        <QrPopup
-          url={selectedQR}
-          onClose={() => setSelectedQR(null)}
+          batchInputs={batchInputs}
+          onClose={() => setShowBatch(false)}
+          onAddInput={handleAddBatchInput}
+          onInputChange={handleBatchInputChange}
+          onSubmit={handleBatchSubmit}
+          isLoading={isLoading}
         />
       )}
 
       <div className="dashboard-header">
         <h2>URL Shortener</h2>
-        <button className="btn-batch" onClick={() => setShowBatch(true)}>
+        <button
+          className="btn-batch"
+          onClick={() => setShowBatch(true)}
+          disabled={isLoading}
+        >
           + Create Batch
         </button>
       </div>
@@ -146,6 +136,7 @@ const UrlDashboard = () => {
           placeholder="Enter your long URL"
           value={urlInput}
           onChange={(e) => setUrlInput(e.target.value)}
+          disabled={isLoading}
         />
         <input
           type="text"
@@ -153,62 +144,56 @@ const UrlDashboard = () => {
           value={aliasInput}
           onChange={(e) => setAliasInput(e.target.value)}
           maxLength={20}
+          disabled={isLoading}
         />
-        <button className="btn-shorten" onClick={handleShorten}>
-          Shorten
+        <button
+          className="btn-shorten"
+          onClick={handleShorten}
+          disabled={isLoading}
+        >
+          {isLoading ? "Processing..." : "Shorten"}
         </button>
       </div>
 
-      {links.length === 0 && batches.length === 0 ? (
-        <p style={{ color: "#94a3b8" }}>No URLs yet. Try shortening one above.</p>
+      {error && <div className="error-message">{error}</div>}
+
+      {isLoading && links.length === 0 ? (
+        <div className="loading-message">Loading your URLs...</div>
+      ) : links.length === 0 && batches.length === 0 ? (
+        <p className="empty-message">No URLs yet. Try shortening one above.</p>
       ) : (
         <div className="url-list">
-
           {links.map((link, index) => (
-            <div className="url-batch-inner" key={`link-${index}`}>
+            <div className="url-batch-inner" key={`link-${link.short_link || index}`}>
               <LinkCard
-                originalUrl={link.originalUrl}
-                shortUrl={link.shortUrl}
-                customAlias={link.customAlias}
-                onShowQR={setSelectedQR}
-                onCopy={(copiedText) => console.log("Copied:", copiedText)}
-                onDelete={() => {
-                  const updatedLinks = [...links];
-                  updatedLinks.splice(index, 1);
-                  setLinks(updatedLinks);
-                }}
+                originalUrl={link.long_link}
+                shortUrl={link.short_link}
+                customAlias={link.custom_alias || ""}
               />
             </div>
           ))}
 
           {batches.map((batch, batchIndex) => (
             <div className="url-batch" key={`batch-${batchIndex}`}>
-              {batch.map((link, linkIndex) => (
-                <LinkCard
-                  key={`batch-${batchIndex}-link-${linkIndex}`}
-                  originalUrl={link.originalUrl}
-                  shortUrl={link.shortUrl}
-                  customAlias={link.customAlias}
-                  onShowQR={setSelectedQR}
-                  onCopy={() => toast.success("Copied to clipboard!")}
-                  onDelete={() => {
-                    const updatedBatch = [...batch];
-                    updatedBatch.splice(linkIndex, 1);
-
-                    const updatedBatches = [...batches];
-                    if (updatedBatch.length === 0) {
-                      updatedBatches.splice(batchIndex, 1);
-                    } else {
-                      updatedBatches[batchIndex] = updatedBatch;
-                    }
-
-                    setBatches(updatedBatches);
-                  }}
-                />
+              {batch.map((link, index) => (
+                <div className="url-card" key={`batch-${batchIndex}-link-${index}`}>
+                  <div>
+                    <p className="label">Original URL</p>
+                    <p>{link.originalUrl}</p>
+                  </div>
+                  <div>
+                    <p className="label">ShortURL</p>
+                    <p>{link.shortUrl}</p>
+                  </div>
+                  <div className="actions">
+                    <button title="QR"><FaQrcode /></button>
+                    <button title="Copy"><FaCopy /></button>
+                    <button title="Delete"><FaTrash /></button>
+                  </div>
+                </div>
               ))}
             </div>
           ))}
-
         </div>
       )}
     </div>
